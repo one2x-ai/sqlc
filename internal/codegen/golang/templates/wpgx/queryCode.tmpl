@@ -82,7 +82,7 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             key := {{.CacheKey}}
             err = q.cache.Invalidate(ctx, key)
             if err != nil {
-                log.Error().Err(err).Msgf(
+                log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
                 anyErr = err
             }
@@ -164,7 +164,7 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             key := {{.CacheKey}}
             err = q.cache.Invalidate(ctx, key)
             if err != nil {
-                log.Error().Err(err).Msgf(
+                log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
                 anyErr = err
             }
@@ -198,7 +198,7 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             key := {{.CacheKey}}
             err = q.cache.Invalidate(ctx, key)
             if err != nil {
-                log.Error().Err(err).Msgf(
+                log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
                 anyErr = err
             }
@@ -232,7 +232,7 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             key := {{.CacheKey}}
             err = q.cache.Invalidate(ctx, key)
             if err != nil {
-                log.Error().Err(err).Msgf(
+                log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
                 anyErr = err
             }
@@ -266,7 +266,7 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             key := {{.CacheKey}}
             err = q.cache.Invalidate(ctx, key)
             if err != nil {
-                log.Error().Err(err).Msgf(
+                log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
                 anyErr = err
             }
