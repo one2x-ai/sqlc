@@ -18,7 +18,7 @@ as this combo.
 
 Production versions:
 
-+ sqlc: v2.1.9-wicked-fork
++ sqlc: v2.1.10-wicked-fork
 + dcache: v0.1.3
 + wgpx: v0.2.2
 
