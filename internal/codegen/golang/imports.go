@@ -437,6 +437,7 @@ func (i *importer) copyfromImports() fileImports {
 	})
 
 	std["context"] = struct{}{}
+	std["time"] = struct{}{}
 	if i.Settings.Go.SqlDriver == SQLDriverGoSQLDriverMySQL {
 		std["io"] = struct{}{}
 		std["fmt"] = struct{}{}
