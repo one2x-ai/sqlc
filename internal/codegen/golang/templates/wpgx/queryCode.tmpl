@@ -78,9 +78,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
 {{ if  .Option.Invalidates -}}
     // invalidate
     _ = q.db.PostExec(func() error {
-        var anyErr error
+		anyErr := make(chan error, {{len .Invalidates}})
+		var wg sync.WaitGroup
+        wg.Add({{len .Invalidates}})
         {{ range .Invalidates -}}
-        {
+        go func() {
+        defer wg.Done()
         {{ if not .NoArg -}}
         if {{.ArgName}} != nil {
         {{ end -}}
@@ -89,14 +92,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             if err != nil {
                 log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
-                anyErr = err
+                anyErr <- err
             }
         {{ if not .NoArg -}}
         }
         {{ end -}}
-        }
+        }()
         {{ end -}}
-        return anyErr
+		wg.Wait()
+		close(anyErr)
+        return <-anyErr
     })
 {{- end }}
     return {{.Ret.Name}}, err
@@ -166,9 +171,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
 {{ if  .Option.Invalidates -}}
     // invalidate
     _ = q.db.PostExec(func() error {
-        var anyErr error
+		anyErr := make(chan error, {{len .Invalidates}})
+		var wg sync.WaitGroup
+        wg.Add({{len .Invalidates}})
         {{ range .Invalidates -}}
-        {
+        go func() {
+        defer wg.Done()
         {{ if not .NoArg -}}
         if {{.ArgName}} != nil {
         {{ end -}}
@@ -177,14 +185,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             if err != nil {
                 log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
-                anyErr = err
+                anyErr <- err
             }
         {{ if not .NoArg -}}
         }
         {{ end -}}
-        }
+        }()
         {{ end -}}
-        return anyErr
+		wg.Wait()
+		close(anyErr)
+        return <-anyErr
     })
 {{- end }}
     return items, err
@@ -206,9 +216,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
 {{ if  .Option.Invalidates -}}
     // invalidate
     _ = q.db.PostExec(func() error {
-        var anyErr error
+		anyErr := make(chan error, {{len .Invalidates}})
+		var wg sync.WaitGroup
+        wg.Add({{len .Invalidates}})
         {{ range .Invalidates -}}
-        {
+        go func() {
+        defer wg.Done()
         {{ if not .NoArg -}}
         if {{.ArgName}} != nil {
         {{ end -}}
@@ -217,14 +230,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             if err != nil {
                 log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
-                anyErr = err
+                anyErr <- err
             }
         {{ if not .NoArg -}}
         }
         {{ end -}}
-        }
+        }()
         {{ end -}}
-        return anyErr
+		wg.Wait()
+		close(anyErr)
+        return <-anyErr
     })
 {{- end }}
     return nil
@@ -246,9 +261,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
 {{ if  .Option.Invalidates -}}
     // invalidate
     _ = q.db.PostExec(func() error {
-        var anyErr error
+		anyErr := make(chan error, {{len .Invalidates}})
+		var wg sync.WaitGroup
+        wg.Add({{len .Invalidates}})
         {{ range .Invalidates -}}
-        {
+        go func() {
+        defer wg.Done()
         {{ if not .NoArg -}}
         if {{.ArgName}} != nil {
         {{ end -}}
@@ -257,14 +275,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             if err != nil {
                 log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
-                anyErr = err
+                anyErr <- err
             }
         {{ if not .NoArg -}}
         }
         {{ end -}}
-        }
+        }()
         {{ end -}}
-        return anyErr
+		wg.Wait()
+		close(anyErr)
+        return <-anyErr
     })
 {{- end }}
     return result.RowsAffected(), nil
@@ -286,9 +306,12 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
 {{ if  .Option.Invalidates -}}
     // invalidate
     _ = q.db.PostExec(func() error {
-        var anyErr error
+		anyErr := make(chan error, {{len .Invalidates}})
+		var wg sync.WaitGroup
+        wg.Add({{len .Invalidates}})
         {{ range .Invalidates -}}
-        {
+        go func() {
+        defer wg.Done()
         {{ if not .NoArg -}}
         if {{.ArgName}} != nil {
         {{ end -}}
@@ -297,14 +320,16 @@ func (q *Queries) {{.MethodName}}(ctx context.Context, {{.Arg.Pair}} {{.Invalida
             if err != nil {
                 log.Ctx(ctx).Error().Err(err).Msgf(
                     "Failed to invalidate: %s", key)
-                anyErr = err
+                anyErr <- err
             }
         {{ if not .NoArg -}}
         }
         {{ end -}}
-        }
+        }()
         {{ end -}}
-        return anyErr
+		wg.Wait()
+		close(anyErr)
+        return <-anyErr
     })
 {{- end }}
     return rv, nil
@@ -383,5 +408,6 @@ var _ = time.Now()
 var _ = json.RawMessage{}
 var _ = sha256.Sum256(nil)
 var _ = hex.EncodeToString(nil)
+var _ = sync.WaitGroup{}
 
 {{end}}

@@ -396,6 +396,7 @@ func (i *importer) queryImports(filename string) fileImports {
 		std["encoding/json"] = struct{}{}
 		std["crypto/sha256"] = struct{}{}
 		std["encoding/hex"] = struct{}{}
+		std["sync"] = struct{}{}
 	}
 
 	sqlpkg := parseDriver(i.Settings.Go.SqlPackage)
