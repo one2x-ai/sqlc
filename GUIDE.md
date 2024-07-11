@@ -18,9 +18,9 @@ as this combo.
 
 Production versions:
 
-+ sqlc: v2.1.10-wicked-fork
-+ dcache: v0.1.3
-+ wgpx: v0.2.2
++ sqlc: v2.2.0-wicked-fork
++ dcache: v0.2.0 (Note: redis/v8 users please use v0.1.4)
++ wgpx: v0.2.3
 
 # Sqlc (this wicked fork)
 
@@ -221,6 +221,7 @@ If we add a query that joins books and users with the order table, for example,
 
 ```sql
 -- name: GetOrderByID :one
+-- -- timeout : 500ms
 SELECT
   orders.ID,
   orders.user_id,
@@ -301,11 +302,20 @@ must have 1 query file.
 Queries can access all the table columns as long as their tables are listed in the schema section in
 the configuration. We have seen an example, `GetOrderByID`, where the query joins other tables.
 
+NOTE: Starting from v2.2.0, **all** queries must have `timeout` option configured. If timeout option is missing,
+sqlc generation will failed with error messages like
+
+```
+ERROR: orders/GetOrderByID does not have a timeout option
+ERROR: *pkg*/*name* does not have a timeout option
+```
+
 Here is an example of listing all books of a category, with using id
 as the cursor for pagination.
 
 ```sql
 -- name: ListByCategory :many
+-- -- timeout : 500ms
 SELECT *
 FROM
   books
@@ -316,16 +326,17 @@ ORDER BY
 LIMIT @first;
 ```
 
-This wicked forked sqlc adds two abilities to query: cache and invalidate.
+This wicked forked sqlc adds 3 abilities to query: cache, timeout and invalidate.
 
-Both of them are added by extending sqlc to allow passing additional options per each query.
+All of them are added by extending sqlc to allow passing additional options per each query.
 Originally, you can only specify name and the type of result in the comments before SQL.
 The new feature allows you to pass any options to codegen backend by adding comments starts with `-- --`.
 
-For example, this will generate code that caches the result of all books for 10 minutes.
+For example, this will generate code that caches the result of all books for 10 minutes, with 500 milliseconds timeout.
 
 ```sql
 -- name: GetAllBooks :many
+-- -- timeout : 500ms
 -- -- cache : 10m
 SELECT * FROM books;
 ```
@@ -350,6 +361,26 @@ The best practice is to cache frequently queried objects, especially
 + cache results that we do not know how to invalidate for a shorter time. For example, a list of top seller
   books, because it is hard for us to know if we should invalidate the cache of that list when we are updating
   information of some books, (unless you do some fancy bloom-filter stuff..).
+  
+#### Timeout
+
+Because setting timeout for queries is such an important practice, starting from v2.2.0, we make this a mandatory option.
+
+The following code shows how to use set a timeout option for a query.
+
+```sql
+-- name: GetAllBooks :many
+-- -- timeout : 500ms
+SELECT * FROM books;
+```
+
+The benefits of adding timeout to queries are:
+
++ Resource control and DoS prevention: by setting a timeout, you can prevent a query from running too long and consuming too much resource. 
+  Note that it is possible to construct a set of queries that one depends on the result of some other, so that when
+  processing them concurrently, it may result longer and longer lock wait duration and eventually bring down the database, because
+  all the connections, CPU resources are consumed by the waiting queries.
++ Prevents deadlocks: it prevents a query from blocking other queries.
 
 #### Invalidate
 
