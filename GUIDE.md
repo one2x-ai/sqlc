@@ -18,7 +18,7 @@ as this combo.
 
 Production versions:
 
-+ sqlc: v2.2.0-wicked-fork
++ sqlc: v2.2.1-wicked-fork
 + dcache: v0.2.0 (Note: redis/v8 users please use v0.1.4)
 + wgpx: v0.2.3
 
@@ -365,6 +365,8 @@ The best practice is to cache frequently queried objects, especially
 #### Timeout
 
 Because setting timeout for queries is such an important practice, starting from v2.2.0, we make this a mandatory option.
+If cache is enabled, the timeout duration applies to the whole "query" process, including trying to read from cache and
+actual database query.
 
 The following code shows how to use set a timeout option for a query.
 
