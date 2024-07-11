@@ -10,12 +10,14 @@ const (
 	WPgxOptionKeyCache       = "cache"
 	WPgxOptionKeyInvalidate  = "invalidate"
 	WpgxOptionKeyCountIntent = "count_intent"
+	WpgxOptionKeyTimeout     = "timeout"
 )
 
 type WPgxOption struct {
 	Cache       time.Duration
 	Invalidates []string
 	CountIntent bool
+	Timeout     time.Duration
 }
 
 func parseOption(options map[string]string, queryNames map[string]bool) (rv WPgxOption, err error) {
@@ -46,6 +48,14 @@ func parseOption(options map[string]string, queryNames map[string]bool) (rv WPgx
 				rv.CountIntent = false
 			} else {
 				return rv, fmt.Errorf("Unknown count_intent value: %s", v)
+			}
+		case WpgxOptionKeyTimeout:
+			rv.Timeout, err = time.ParseDuration(v)
+			if err != nil {
+				return
+			}
+			if rv.Timeout < 1*time.Millisecond {
+				return rv, fmt.Errorf("timeout duration too short: %s", v)
 			}
 		default:
 			return rv, fmt.Errorf("Unknown option: %s", k)

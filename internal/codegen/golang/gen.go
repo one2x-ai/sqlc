@@ -117,6 +117,20 @@ func Generate(ctx context.Context, req *plugin.CodeGenRequest) (*plugin.CodeGenR
 	if err != nil {
 		return nil, err
 	}
+
+	// Starting from version v2.2.0, sqlc requires a timeout option for all queries
+	// Print errors for all queries that do not have a timeout option configured.
+	shouldFailed := false
+	for _, q := range queries {
+		if q.Option.Timeout == 0 {
+			errorf("%s/%s does not have a timeout option", q.Pkg, q.MethodName)
+			shouldFailed = true
+		}
+	}
+	if shouldFailed {
+		return nil, errors.New(timeoutRequiredErrorStr)
+	}
+
 	return generate(req, enums, structs, queries)
 }
 
