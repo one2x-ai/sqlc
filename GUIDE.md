@@ -20,7 +20,7 @@ Production versions:
 
 + sqlc: v2.3.0-wicked-fork
 + dcache: v0.3.0 (Note: redis/v8 users please use v0.1.4)
-+ wgpx: v0.3.0
++ wgpx: v0.3.1
 
 # Sqlc (this wicked fork)
 
@@ -363,6 +363,35 @@ The best practice is to cache frequently queried objects, especially
   books, because it is hard for us to know if we should invalidate the cache of that list when we are updating
   information of some books, (unless you do some fancy bloom-filter stuff..).
   
+#### Use Read Replica
+
+We support heterogeneous database replicas, meaning that you can not only use physical replia that is exactly the same as
+the primary instance, but also logical replicas that may have different schema, like additional materialzied views, plugins,
+or only some part of the table.
+
+Replicas are managed by the wpgx pool object. We enforce that read replicas are "read-only" on the SQL level.
+
+Example:
+
+```go
+replicaName := wpgx.ReplicaName("R1")
+r1, _ := suite.Pool.WQuerier(&replicaName)
+cond := "b%"
+rst, err := suite.usecase.books.UseReplica(r1).GetBookBySpec(ctx, books.GetBookBySpecParams{
+	Name: &cond,
+})
+```
+
+To setup managed read replica, you will configure them in the environment variables, like:
+
+```
+POSTGRES_REPLICAPREFIXES=R1,R2
+R1_NAME=R1
+R1_HOST=localhost
+R1_PORT=5433
+...
+```
+
 #### Timeout
 
 Because setting timeout for queries is such an important practice, starting from v2.2.0, we make this a mandatory option.
@@ -388,6 +417,8 @@ The benefits of adding timeout to queries are:
 #### Invalidate
 
 When we mutate the state of table, we should proactively invalidate some cache values.
+
+TBD: How the invalidate option support this feature and how it works in Transaction.
 
 #### Best practices
 
