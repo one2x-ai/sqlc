@@ -165,29 +165,147 @@ func rangeVars(root ast.Node) []*ast.RangeVar {
 	return vars
 }
 
-func uniqueParamRefs(in []paramRef, dollar bool) []paramRef {
-	m := make(map[int]bool, len(in))
-	o := make([]paramRef, 0, len(in))
-	for _, v := range in {
-		if !m[v.ref.Number] {
-			m[v.ref.Number] = true
-			if v.ref.Number != 0 {
-				o = append(o, v)
+// scoreParamRefForTypeInference scores a parameter reference based on how good
+// its context is for type inference. Higher scores indicate better contexts.
+func scoreParamRefForTypeInference(ref paramRef) int {
+	if ref.parent == nil {
+		return 0 // No context
+	}
+
+	switch parent := ref.parent.(type) {
+	case *ast.TypeCast:
+		// Explicit type cast - excellent for type inference
+		return 100
+
+	case *ast.A_Expr:
+		// Expression context - quality depends on the operator
+		if parent.Name != nil && len(parent.Name.Items) > 0 {
+			if nameStr, ok := parent.Name.Items[0].(*ast.String); ok {
+				switch nameStr.Str {
+				case "=", "==", "!=", "<>", "<", "<=", ">", ">=":
+					// Comparison operations - very good for type inference
+					return 100
+				case "+", "-", "*", "/", "%":
+					// Mathematical operations - good for type inference
+					return 90
+				case "||":
+					// String concatenation - good for type inference
+					return 90
+				case "~~", "!~~", "~~*", "!~~*":
+					// LIKE operations - good for type inference
+					return 90
+				case "IS", "IS NOT":
+					// IS NULL/IS NOT NULL - poor for type inference
+					return 0
+				default:
+					return 50
+				}
 			}
 		}
+		return 50 // Default for A_Expr without clear operator
+
+	case *ast.BoolExpr:
+		// Boolean expressions
+		switch parent.Boolop {
+		case ast.BoolExprTypeAnd, ast.BoolExprTypeOr:
+			// Logical operations - still useful but lower priority
+			return 60
+		case ast.BoolExprTypeIsNull, ast.BoolExprTypeIsNotNull:
+			// IS NULL/IS NOT NULL - poor for type inference
+			return 20
+		case ast.BoolExprTypeNot:
+			// NOT operations - moderate for type inference
+			return 50
+		default:
+			return 40
+		}
+
+	case *ast.BetweenExpr:
+		// BETWEEN expressions - good for type inference
+		return 75
+
+	case *ast.FuncCall:
+		// Function call context - depends on function, generally moderate
+		// sqlc.narg() and similar functions have poor type inference context
+		if parent.Funcname != nil && len(parent.Funcname.Items) > 0 {
+			if nameStr, ok := parent.Funcname.Items[0].(*ast.String); ok {
+				if nameStr.Str == "sqlc.narg" || nameStr.Str == "sqlc.arg" {
+					// sqlc parameter functions in isolation - poor for type inference
+					return 30
+				}
+			}
+		}
+		return 40
+
+	case *ast.ResTarget:
+		// SELECT target or similar - can be good for type inference
+		return 60
+
+	case *ast.In:
+		// IN expression - good for type inference
+		return 70
+
+	case *limitCount, *limitOffset:
+		// LIMIT/OFFSET - known to be integer, good for type inference
+		return 90
+
+	default:
+		// Unknown context - assign low score
+		return 10
 	}
+}
+
+func uniqueParamRefs(in []paramRef, dollar bool) []paramRef {
+	// Group parameter references by their number
+	paramGroups := make(map[int][]paramRef)
+	for _, v := range in {
+		if v.ref.Number != 0 {
+			paramGroups[v.ref.Number] = append(paramGroups[v.ref.Number], v)
+		}
+	}
+
+	// For each parameter number, select the reference with the best type inference context
+	o := make([]paramRef, 0, len(paramGroups))
+	for _, refs := range paramGroups {
+		if len(refs) == 1 {
+			// Only one reference, use it
+			o = append(o, refs[0])
+		} else {
+			// Multiple references, select the one with the highest score
+			bestRef := refs[0]
+			bestScore := scoreParamRefForTypeInference(refs[0])
+
+			for _, ref := range refs[1:] {
+				score := scoreParamRefForTypeInference(ref)
+				if score > bestScore {
+					bestScore = score
+					bestRef = ref
+				}
+			}
+			o = append(o, bestRef)
+		}
+	}
+
+	// Handle unnamed parameters (number == 0) for non-dollar parameter styles
 	if !dollar {
 		start := 1
+		usedNumbers := make(map[int]bool)
+		for _, v := range o {
+			usedNumbers[v.ref.Number] = true
+		}
+
 		for _, v := range in {
 			if v.ref.Number == 0 {
-				for m[start] {
+				for usedNumbers[start] {
 					start++
 				}
 				v.ref.Number = start
+				usedNumbers[start] = true
 				o = append(o, v)
 			}
 		}
 	}
+
 	return o
 }
 
