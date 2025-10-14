@@ -130,7 +130,7 @@ func (i *importer) dbImports() fileImports {
 		pkg = append(pkg, ImportSpec{Path: "github.com/jackc/pgx/v5"})
 	case SQLDriverWPGX:
 		std = []ImportSpec{}
-		pkg = append(pkg, ImportSpec{Path: "github.com/stumble/wpgx"})
+		pkg = append(pkg, ImportSpec{Path: "github.com/one2x-ai/wpgx"})
 		pkg = append(pkg, ImportSpec{Path: "github.com/stumble/dcache"})
 	default:
 		std = append(std, ImportSpec{Path: "database/sql"})
@@ -496,7 +496,7 @@ func (i *importer) batchImports() fileImports {
 	case SQLDriverPGXV5:
 		pkg[ImportSpec{Path: "github.com/jackc/pgx/v5"}] = struct{}{}
 	case SQLDriverWPGX:
-		pkg[ImportSpec{Path: "github.com/stumble/wpgx"}] = struct{}{}
+		pkg[ImportSpec{Path: "github.com/one2x-ai/wpgx"}] = struct{}{}
 	}
 
 	return sortedImports(std, pkg)
