@@ -16,7 +16,7 @@ const (
 	SQLDriverPGXV5                      = "github.com/jackc/pgx/v5"
 	SQLDriverLibPQ                      = "github.com/lib/pq"
 	SQLDriverGoSQLDriverMySQL           = "github.com/go-sql-driver/mysql"
-	SQLDriverWPGX                       = "github.com/stumble/wpgx"
+	SQLDriverWPGX                       = "github.com/one2x-ai/wpgx"
 )
 
 func parseDriver(sqlPackage string) SQLDriver {
