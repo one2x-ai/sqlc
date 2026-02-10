@@ -1,5 +1,5 @@
 CGO_ENABLED = 1
-COMMIT_HASH := $(shell git --no-pager describe --tags --always --dirty)
+COMMIT_HASH := $(shell git --no-pager rev-parse --short HEAD)
 LDFLAGS = "-X github.com/sqlc-dev/sqlc/internal/info.Version=$(COMMIT_HASH)-wicked-fork"
 # macOS 15.4+ needs strchrnul fix
 BUILD_ENV = $(shell [ "$$(uname -s)" = "Darwin" ] && [ "$$(sw_vers -productVersion | cut -d. -f1)" -ge 15 ] && echo 'MACOSX_DEPLOYMENT_TARGET=15.4 CGO_CFLAGS="-DHAVE_STRCHRNUL"')
