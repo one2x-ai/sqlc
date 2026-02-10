@@ -10,3 +10,4 @@ __pycache__
 devenv.local.nix
 
 bin/
+/.cursor/rules
